@@ -18,9 +18,9 @@ class UnionHttpTest extends TestCase
         $loop = Factory::create();
         Scheduler::setDefaultFactory(fn() => new Scheduler\ImmediateScheduler($loop));
         $loop->run();
-      }
+    }
 
-    public function testOfUsesHttpClients(): void
+    public function testUsesHttpClients(): void
     {
         $dub = Mockery::mock('alias:' . Http::class)->allows();
         $dub->get('https://example1.com')
@@ -45,7 +45,7 @@ class UnionHttpTest extends TestCase
         });
     }
 
-    public function testOfUsesRawLinks(): void
+    public function testUsesRawLinks(): void
     {
         $dub = Mockery::mock('alias:' . Http::class)->allows();
         $dub->get('https://example1.com')
