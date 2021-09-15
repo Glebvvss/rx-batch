@@ -1,8 +1,8 @@
-## Rx Union Http
+# Rx Union Http
 
 Library for processing parallel http requests as single batch.
 
-# Use Case
+### Use Case
 ```
 <?php
 
