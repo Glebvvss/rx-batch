@@ -32,21 +32,22 @@ class Batch
                         throw new InvalidArgumentException('Resource value must be string or Rx\Observable');
                     }
 
-                    return $resource->map(fn($data) => $this->prepare($data));
+                    return Observable::of([$this->getNextKey(), $resource]);
                 })
                 ->subscribe(
-                    fn(array $data) => $this->fill($data),
-                    fn($e) => $reject($e),
-                    fn() => $this->isDone() && $resolve($this->resultSet)
+                    function($data) use (&$resolve, &$reject) {
+                        [$key, $observable] = $data;
+                        $observable->subscribe(
+                            fn($result) => $this->resultSet[$key] = $result,
+                            fn($e) => $reject($e),
+                            fn() => $this->isDone() && $resolve($this->resultSet)
+                        );
+                    },
+                    fn($e) => $reject($e)
                 );
         });
     
         return Observable::fromPromise($promise);
-    }
-
-    private function prepare($data): array
-    {
-        return [$this->getNextKey(), $data];
     }
 
     private function getNextKey(): string
@@ -60,11 +61,5 @@ class Batch
     private function isDone(): bool
     {
         return count($this->resultSet) === count($this->resources);
-    }
-
-    private function fill(array $data): void
-    {
-        [$resource, $result] = $data;
-        $this->resultSet[$resource] = $result;
     }
 }
