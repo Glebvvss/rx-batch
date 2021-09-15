@@ -1,0 +1,23 @@
+{
+    "name": "gleb/rx-any",
+    "authors": [
+        {
+            "name": "Gleb Vasylenko",
+            "email": "hleb.v@platinumlist.pro"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "RxUnionHttp\\": "src/"
+        }
+    },
+    "require": {
+        "react/event-loop": "^1.2",
+        "reactivex/rxphp": "^2.0",
+        "rx/http": "^2.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "mockery/mockery": "^1.4"
+    }
+}
