@@ -3,7 +3,7 @@
 Library for processing parallel http requests as single batch uses RxPHP.
 
 ### Use Case
-```
+```php
 <?php
 
 require_once __DIR__ . '/vendor/autoload.php';
