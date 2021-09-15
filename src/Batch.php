@@ -1,13 +1,13 @@
 <?php
 
-namespace RxUnionHttp;
+namespace RxBatch;
 
 use Rx\Observable;
 use Rx\React\Http;
 use React\Promise\Promise;
 use InvalidArgumentException;
 
-class UnionHttp
+class Batch
 {
     private int   $pointer   = 0;
     private array $resultSet = [];
@@ -28,15 +28,11 @@ class UnionHttp
         $promise = new Promise(function($resolve, $reject) {
             Observable::fromArray($this->resources)
                 ->flatMap(function($resource) {
-                    if (is_string($resource)) {
-                        $resource = Http::get($resource);
-                    }
-
                     if (!$resource instanceof Observable) {
                         throw new InvalidArgumentException('Resource value must be string or Rx\Observable');
                     }
 
-                    return $resource->map(fn($data) => $this->prepareResponse($data));
+                    return $resource->map(fn($data) => $this->prepare($data));
                 })
                 ->subscribe(
                     fn(array $data) => $this->fill($data),
@@ -48,7 +44,7 @@ class UnionHttp
         return Observable::fromPromise($promise);
     }
 
-    private function prepareResponse($data): array
+    private function prepare($data): array
     {
         return [$this->getNextKey(), $data];
     }

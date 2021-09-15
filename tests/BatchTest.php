@@ -1,17 +1,17 @@
 <?php
 
-namespace Tests\UnionHttp;
+namespace Tests\Batch;
 
 use Mockery;
 use Rx\Scheduler;
 use Rx\Observable;
 use Rx\React\Http;
+use RxBatch\Batch;
 use React\Promise\Promise;
-use RxUnionHttp\UnionHttp;
 use React\EventLoop\Factory;
 use PHPUnit\Framework\TestCase;
 
-class UnionHttpTest extends TestCase
+class BatchTest extends TestCase
 {
     public static function setUpBeforeClass(): void
     {
@@ -34,7 +34,7 @@ class UnionHttpTest extends TestCase
             'request_2' => Http::get('https://example2.com'),
         ];
 
-        UnionHttp::of($resources)->subscribe(function($data) {
+        Batch::of($resources)->subscribe(function($data) {
             $this->assertEquals(
                 [
                     'request_1' => 'Response 1',
@@ -45,25 +45,18 @@ class UnionHttpTest extends TestCase
         });
     }
 
-    public function testUsesRawLinks(): void
+    public function testUsesRegularObservables(): void
     {
-        $dub = Mockery::mock('alias:' . Http::class)->allows();
-        $dub->get('https://example1.com')
-            ->andReturn(Observable::of('Response 1'));
-
-        $dub->get('https://example2.com')
-            ->andReturn(Observable::of('Response 2'));
-
         $resources = [
-            'request_1' => 'https://example1.com',
-            'request_2' => 'https://example2.com',
+            'task_1' => Observable::of('Result 1'),
+            'task_2' => Observable::of('Result 2'),
         ];
 
-        UnionHttp::of($resources)->subscribe(function($data) {
+        Batch::of($resources)->subscribe(function($data) {
             $this->assertEquals(
                 [
-                    'request_1' => 'Response 1',
-                    'request_2' => 'Response 2',
+                    'task_1' => 'Result 1',
+                    'task_2' => 'Result 2',
                 ], 
                 $data
             );
