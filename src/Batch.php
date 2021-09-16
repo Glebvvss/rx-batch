@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace RxBatch;
 
 use Rx\Observable;
@@ -55,7 +57,7 @@ class Batch
         $keys = array_keys($this->resources);
         $key = $keys[$this->pointer];
         ++$this->pointer;
-        return $key;
+        return (string) $key;
     }
 
     private function isDone(): bool
