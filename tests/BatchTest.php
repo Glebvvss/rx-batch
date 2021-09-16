@@ -62,4 +62,19 @@ class BatchTest extends TestCase
             );
         });
     }
+
+    public function testUsesNoAssocArray(): void
+    {
+        $resources = [
+            Observable::of('Result 1'),
+            Observable::of('Result 2'),
+        ];
+
+        Batch::of($resources)->subscribe(function($data) {
+            $this->assertEquals(
+                ['Result 1', 'Result 2',], 
+                $data
+            );
+        });
+    }
 }
