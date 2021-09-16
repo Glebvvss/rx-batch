@@ -1,9 +1,9 @@
 {
-    "name": "gleb/rx-any",
+    "name": "rx-batch/rx-batch",
     "authors": [
         {
             "name": "Gleb Vasylenko",
-            "email": "hleb.v@platinumlist.pro"
+            "email": "glebvs93@gmail.com"
         }
     ],
     "autoload": {
