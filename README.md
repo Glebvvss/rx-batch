@@ -1,6 +1,6 @@
-# Rx Union Http
+# Rx Batch
 
-Library for processing parallel http requests as single batch uses RxPHP.
+Library for processing miltiple observables as single batch uses RxPHP.
 
 ### Use Case
 ```php
