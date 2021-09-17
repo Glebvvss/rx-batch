@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RxBatch;
 
+use Throwble;
 use Rx\Observable;
 use Rx\React\Http;
 use React\Promise\Promise;
@@ -29,30 +30,24 @@ class Batch
     {
         $promise = new Promise(function($resolve, $reject) {
             Observable::fromArray($this->resources)
-                ->flatMap(function($resource) {
-                    if (!$resource instanceof Observable) {
-                        throw new InvalidArgumentException('Resource value must be string or Rx\Observable');
-                    }
-
-                    return Observable::of([$this->getNextKey(), $resource]);
-                })
+                ->flatMap(fn(Observable $observable) => Observable::of([
+                    'key'        => $this->generateKey(),
+                    'observable' => $observable
+                ]))
                 ->subscribe(
-                    function($data) use (&$resolve, &$reject) {
-                        [$key, $observable] = $data;
-                        $observable->subscribe(
-                            fn($result) => $this->resultSet[$key] = $result,
-                            fn($e) => $reject($e),
-                            fn() => $this->isDone() && $resolve($this->resultSet)
-                        );
-                    },
-                    fn($e) => $reject($e)
+                    fn(array $payload) => $payload['observable']->subscribe(
+                        fn($result) => $this->resultSet[$payload['key']] = $result,
+                        fn($e)      => $reject($e),
+                        fn()        => $this->isCompleted() && $resolve($this->resultSet)
+                    ),
+                    fn(Throwble $e) => $reject($e)
                 );
         });
-    
+
         return Observable::fromPromise($promise);
     }
 
-    private function getNextKey(): string
+    private function generateKey(): string
     {
         $keys = array_keys($this->resources);
         $key = $keys[$this->pointer];
@@ -60,7 +55,7 @@ class Batch
         return (string) $key;
     }
 
-    private function isDone(): bool
+    private function isCompleted(): bool
     {
         return count($this->resultSet) === count($this->resources);
     }
