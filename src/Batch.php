@@ -4,59 +4,44 @@ declare(strict_types=1);
 
 namespace RxBatch;
 
-use Throwble;
 use Rx\Observable;
-use Rx\React\Http;
-use React\Promise\Promise;
-use InvalidArgumentException;
 
 class Batch
 {
-    private int   $pointer   = 0;
-    private array $resultSet = [];
-    private array $resources;
+    private array $observables;
 
-    private function __construct(array $resources)
+    private function __construct(array $observables)
     {
-        $this->resources = $resources;
+        $this->observables = $observables;
     }
 
-    public static function of(array $resources): Observable
+    public static function of(array $observables): Observable
     {
-        return (new self($resources))->execute();
+        return (new self($observables))->execute();
     }
 
     private function execute(): Observable
     {
-        $promise = new Promise(function($resolve, $reject) {
-            Observable::fromArray($this->resources)
-                ->flatMap(fn(Observable $observable) => Observable::of([
-                    'key'        => $this->generateKey(),
-                    'observable' => $observable
-                ]))
-                ->subscribe(
-                    fn(array $payload) => $payload['observable']->subscribe(
-                        fn($result) => $this->resultSet[$payload['key']] = $result,
-                        fn($e)      => $reject($e),
-                        fn()        => $this->isCompleted() && $resolve($this->resultSet)
-                    ),
-                    fn(Throwble $e) => $reject($e)
-                );
-        });
-
-        return Observable::fromPromise($promise);
+        return Observable::forkJoin(
+            $this->getPreparedObservables(),
+            fn(...$payloads) => $this->reduce($payloads)
+        );
     }
 
-    private function generateKey(): string
+    private function getPreparedObservables(): array
     {
-        $keys = array_keys($this->resources);
-        $key = $keys[$this->pointer];
-        ++$this->pointer;
-        return (string) $key;
+        return array_map(
+            fn($key) => $this->observables[$key]->map(fn($data) => [$key, $data]),
+            array_keys($this->observables)
+        );
     }
 
-    private function isCompleted(): bool
+    private function reduce(array $payloads): array
     {
-        return count($this->resultSet) === count($this->resources);
+        return array_reduce($payloads, function($result, $payload) {
+            [$key, $data] = $payload;
+            $result[$key] = $data;
+            return $result;
+        }, []);
     }
 }
